@@ -2,6 +2,7 @@ package server
 
 import (
 	"../client"
+
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -13,20 +14,49 @@ import (
 
 type AirTraffic struct {
 	airports []airport
+	Routes []client.Routes
 }
 
-//Método que el avión usara remotamente para solicitar permiso para aterrizar
-func (t *AirTraffic) RequestLanding(avion *client.Plane, response *string) error {
+func (a *AirTraffic) SearchPossibleRoutes(plane *client.Plane, response *[]client.Routes) error {
 
-	*response = "Aprobado"
+	posibleRoutes := []client.Routes{}
+
+	for _, route := range a.Routes {
+		if plane.CurrentAirport == route.TakeoffAirport{
+			posibleRoutes = append(posibleRoutes, route)
+		}
+	}
+
+	*response = posibleRoutes
+	return nil
+
+}
+
+func (a *AirTraffic) RequestPermission(plane *client.Plane, response *bool) error {
+
+	airportIndex := a.searchAirport(plane.CurrentAirport)
+	if a.airports[airportIndex].IsFree {
+		*response = true
+		a.airports[airportIndex].IsFree = false
+	}
 
 	return nil
 
 }
 
-func (t *AirTraffic) ValidatePlane(plane *client.Plane, response *bool) error {
+func (a *AirTraffic) ConfirmOperation(plane *client.Plane, response *bool) error {
 
-	for _, airport := range t.airports{
+	airportIndex := a.searchAirport(plane.CurrentAirport)
+	a.airports[airportIndex].IsFree = true
+
+	return nil
+
+}
+
+
+func (a *AirTraffic) ValidatePlane(plane *client.Plane, response *bool) error {
+
+	for _, airport := range a.airports{
 		if airport.Name == plane.CurrentAirport {
 			*response = true
 			return nil
@@ -37,21 +67,12 @@ func (t *AirTraffic) ValidatePlane(plane *client.Plane, response *bool) error {
 
 }
 
-func (t *AirTraffic) getAirports() {
+func (a *AirTraffic) StartServer(port string) {
 
-	airportsStr, err := ioutil.ReadFile("resources/aiportsInput.json")
-	if err != nil{
-		log.Fatal("Error al obtener los aerepuertos: ", err)
-	}
-	json.Unmarshal(airportsStr, &t.airports)
+	a.getAirports()
+	a.getRoutes()
 
-}
-
-func (t *AirTraffic) StartServer(port string) {
-
-	t.getAirports()
-
-	rpc.Register(t)
+	rpc.Register(a)
 	rpc.HandleHTTP()
 
 	l, err := net.Listen("tcp", port)
@@ -61,5 +82,39 @@ func (t *AirTraffic) StartServer(port string) {
 
 	fmt.Println("Escuchando el puerto ", port)
 	http.Serve(l, nil)
+
+}
+
+func (a *AirTraffic) getAirports() {
+
+	airportsStr, err := ioutil.ReadFile("resources/aiportsInput.json")
+	if err != nil{
+		log.Fatal("Error al obtener los aerepuertos: ", err)
+	}
+	json.Unmarshal(airportsStr, &a.airports)
+
+}
+
+func (a *AirTraffic) getRoutes() {
+
+	routesStr, err := ioutil.ReadFile("resources/routesInput.json")
+	if err != nil{
+		log.Fatal("Error al obtener los aerepuertos: ", err)
+	}
+	json.Unmarshal(routesStr, &a.Routes)
+
+}
+
+func (a *AirTraffic) searchAirport(name string) int {
+
+	result := -1
+
+	for i := 0; i < len(a.airports); i++ {
+		if a.airports[i].Name == name{
+			return i
+		}
+	}
+
+	return result
 
 }

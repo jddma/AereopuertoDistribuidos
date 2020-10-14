@@ -16,11 +16,23 @@ func main()  {
 	switch option {
 
 	case 1:
+
+		//Obtener el host a usar
+		var host string
+		fmt.Print("Digite el host del servidor: ")
+		fmt.Scanln(&host)
+
 		client := client.NewPlane()
-		client.StartClient("127.0.0.1:8082")
+		client.StartClient(host)
 		break
 
 	case 2:
+
+		//Obtener el puerto a escuchar
+		var port string
+		fmt.Print("Digite el puerto a usar: ")
+		fmt.Scanln(&port)
+
 		server := new(server.AirTraffic)
 		server.StartServer(":8082")
 		break

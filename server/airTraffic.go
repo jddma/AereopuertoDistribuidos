@@ -15,6 +15,7 @@ import (
 type AirTraffic struct {
 	airports []airport
 	Routes []client.Routes
+	planesRegister []*planeRegister
 }
 
 //Método a servir al cliente para obtener las posibles rutas que este pueda tomar
@@ -62,12 +63,29 @@ func (a *AirTraffic) ConfirmOperation(plane *client.Plane, response *bool) error
 
 }
 
+//Método a servir al cliente para poder actualizar el registro
+func (a *AirTraffic) UploadRegister(plane *client.Plane, response *bool) error {
+
+	a.planesRegister[plane.Id].airport = plane.CurrentAirport
+	a.planesRegister[plane.Id].inFligth = plane.InFligth
+
+	return nil
+
+}
+
 //Método a servir al cliente para que éste valide su avión
 func (a *AirTraffic) ValidatePlane(plane *client.Plane, response *bool) error {
 
 	//Iterar y validar el aerepuerto inical del avión con los registrados
 	for _, airport := range a.airports{
 		if airport.Name == plane.CurrentAirport {
+
+			//Asignarle un ID al avión
+			plane.Id = len(a.planesRegister)
+
+			//Agregar el nuevo avión al registro
+			a.planesRegister = append(a.planesRegister, NewPlaneRegister(plane.Id, plane.InFligth, plane.CurrentAirport))
+
 			*response = true
 			return nil
 		}
@@ -80,6 +98,7 @@ func (a *AirTraffic) ValidatePlane(plane *client.Plane, response *bool) error {
 //Método para iniciar el servidor
 func (a *AirTraffic) StartServer(port string) {
 
+	a.planesRegister = []*planeRegister{}
 	//Llamar a los métodos que obtienen y resgistran los aerepuertos y rutas existentes
 	a.getAirports()
 	a.getRoutes()

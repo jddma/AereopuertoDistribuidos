@@ -7,6 +7,7 @@ import (
 )
 
 type Plane struct{
+	Id int
 	CurrentAirport string
 	Model string
 	InFligth bool
@@ -87,6 +88,10 @@ func (p *Plane) trigerTakeoff(client *rpc.Client)  {
 
 		//Cambiar el estado de vuelo
 		p.InFligth = true
+
+		//Actualizar el estado del avión en el servidor
+		err := client.Call("AirTraffic.UploadRegister", p, &permission)
+		p.handleCallError(err)
 	} else {
 		fmt.Println("Permiso denegado espere un momento y vuelva a intentarlo")
 	}
@@ -114,6 +119,11 @@ func (p *Plane) trigerLanding(client *rpc.Client)  {
 
 		//Cambiar el estado de vuelo del avión
 		p.InFligth = false
+
+		//Actualizar el estado del avión en el servidor
+		err := client.Call("AirTraffic.UploadRegister", p, &permission)
+		p.handleCallError(err)
+
 	} else {
 		fmt.Println("Permiso denegado espere un momento e intentelo nuevamente")
 	}

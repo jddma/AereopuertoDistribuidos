@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/rpc"
+	"time"
 )
 
 type Plane struct{
@@ -13,6 +14,7 @@ type Plane struct{
 	InFligth bool
 	Destination string
 	Enrollment string
+	Time int
 }
 
 //Método para manejar los errores al momento de usar procesos remotos
@@ -58,6 +60,7 @@ func (p *Plane) getRoute(client *rpc.Client)  {
 
 	//Establecer el aereopuerto de destino
 	p.Destination = posibleRoutes[destinationAirportIndex - 1].DestinationAirport
+	p.Time = posibleRoutes[destinationAirportIndex - 1].Time
 
 }
 
@@ -156,7 +159,9 @@ func (p *Plane) StartClient(host string)  {
 
 		//Validar si el siguiente proceso es aterrizar o despeguar
 		if p.InFligth{
-			fmt.Print("Avión en vuelo para solicitar permiso de aterrizaje al destino presione enter: ")
+			fmt.Println("En vuelo")
+			time.Sleep(time.Duration(p.Time) * time.Second)
+			fmt.Print("Ha llegado al destino presione enter para solicitar permiso de aterrizaje: ")
 			fmt.Scanln()
 
 			//Llamar al método que inicia el despeque

@@ -84,7 +84,7 @@ func (a *AirTraffic) ValidatePlane(plane *client.Plane, response *bool) error {
 			plane.Id = len(a.planesRegister)
 
 			//Agregar el nuevo avión al registro
-			a.planesRegister = append(a.planesRegister, NewPlaneRegister(plane.Id, plane.InFligth, plane.CurrentAirport))
+			a.planesRegister = append(a.planesRegister, NewPlaneRegister(plane.Id, plane.InFligth, plane.CurrentAirport, plane.Enrollment))
 
 			*response = true
 			return nil
@@ -99,6 +99,7 @@ func (a *AirTraffic) ValidatePlane(plane *client.Plane, response *bool) error {
 func (a *AirTraffic) StartServer(port string) {
 
 	a.planesRegister = []*planeRegister{}
+
 	//Llamar a los métodos que obtienen y resgistran los aerepuertos y rutas existentes
 	a.getAirports()
 	a.getRoutes()
@@ -115,9 +116,51 @@ func (a *AirTraffic) StartServer(port string) {
 		log.Fatal("Listen error: ", err)
 	}
 
+	go a.userOptions()
+
 	//Iniciar el servidor con sus configuraciones
 	fmt.Println("Escuchando el puerto ", port)
 	http.Serve(l, nil)
+
+}
+
+//Método para leer las opciones del control de tráfico aereo
+func (a *AirTraffic) userOptions() {
+
+	active := true
+	for active{
+		fmt.Print("* Identificar aviones [1]:\n* Finalizar[2]\n Digite un opción: ")
+
+		var option int
+		fmt.Scanf("%d", &option)
+
+		switch option {
+
+		case 1:
+			a.showPlanes()
+			break
+
+		case 2:
+			active = false
+			break
+
+		}
+	}
+
+
+}
+
+//Método para mostrar en pantalla los aviones registrados
+func (a *AirTraffic) showPlanes()  {
+
+	fmt.Println("***Lista de Aviones registrados***")
+	for _, plane := range a.planesRegister{
+		if plane.inFligth {
+			fmt.Printf("\t* ID: %d - STATUS: En vuelo - MATRÍCULA: %s - DESTINO: %s\n", plane.id, plane.enrollment, plane.airport)
+		}else {
+			fmt.Printf("\t* ID: %d - STATUS: Estacionado - MATRÍCULA: %s - Locación: %s\n", plane.id, plane.enrollment, plane.airport)
+		}
+	}
 
 }
 

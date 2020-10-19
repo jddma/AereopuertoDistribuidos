@@ -12,6 +12,7 @@ type Plane struct{
 	Model string
 	InFligth bool
 	Destination string
+	Enrollment string
 }
 
 //Método para manejar los errores al momento de usar procesos remotos
@@ -28,7 +29,7 @@ func (p *Plane) showPosibleRoutes(posibleRoutes []Routes)  {
 
 	i := 1
 	for _, route := range posibleRoutes {
-		fmt.Printf("\t*** Destino #%d ***\n", i)
+		fmt.Printf("\t*** Destino #%d Tiempo%s ***\n", i, route.Time)
 		fmt.Println("\t   -",route.DestinationAirport)
 		i++
 	}
@@ -187,10 +188,15 @@ func NewPlane() *Plane {
 	fmt.Print("Digite el modelo del avión: ")
 	fmt.Scanln(&model)
 
+	var enrollment string
+	fmt.Print("Digite la matrícula del avión: ")
+	fmt.Scanln(&enrollment)
+
 	return &Plane{
 		CurrentAirport: startAirport,
 		Model: model,
 		InFligth: false,
+		Enrollment: enrollment,
 	}
 
 }
